@@ -2,6 +2,41 @@
 
 import { useState } from "react";
 import { MODES, type Mode } from "@/lib/prompts";
+import { Sparkles, Heart, BookOpen, Quote, Mail, ArrowLeft, Trash2 } from "lucide-react";
+
+const ICON_CONFIG: Record<string, { icon: React.ComponentType<any>; bg: string; color: string; hoverBg: string }> = {
+  intro: {
+    icon: Sparkles,
+    bg: "bg-pink-50 border border-pink-100",
+    color: "text-pink-500",
+    hoverBg: "group-hover:bg-pink-100 group-hover:scale-105"
+  },
+  comfort: {
+    icon: Heart,
+    bg: "bg-rose-50 border border-rose-100",
+    color: "text-rose-500",
+    hoverBg: "group-hover:bg-rose-100 group-hover:scale-105"
+  },
+  diary: {
+    icon: BookOpen,
+    bg: "bg-amber-50 border border-amber-100",
+    color: "text-amber-500",
+    hoverBg: "group-hover:bg-amber-100 group-hover:scale-105"
+  },
+  quote: {
+    icon: Quote,
+    bg: "bg-indigo-50 border border-indigo-100",
+    color: "text-indigo-500",
+    hoverBg: "group-hover:bg-indigo-100 group-hover:scale-105"
+  },
+  email: {
+    icon: Mail,
+    bg: "bg-teal-50 border border-teal-100",
+    color: "text-teal-600",
+    hoverBg: "group-hover:bg-teal-100 group-hover:scale-105"
+  }
+};
+
 
 export default function Home() {
   const [selected, setSelected] = useState<Mode | null>(null);
@@ -75,17 +110,23 @@ export default function Home() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  className="mode-card"
-                  onClick={() => pickMode(mode)}
-                >
-                  <span className="mode-emoji">{mode.emoji}</span>
-                  <span className="mode-title">{mode.title}</span>
-                  <span className="mode-sub">{mode.subtitle}</span>
-                </button>
-              ))}
+              {MODES.map((mode) => {
+                const config = ICON_CONFIG[mode.id] || { icon: Sparkles, bg: "bg-gray-50 border border-gray-100", color: "text-gray-500", hoverBg: "" };
+                const IconComponent = config.icon;
+                return (
+                  <button
+                    key={mode.id}
+                    className="mode-card group cursor-pointer transition-all duration-300"
+                    onClick={() => pickMode(mode)}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${config.bg} ${config.hoverBg} mb-1`}>
+                      <IconComponent className={`w-6 h-6 ${config.color} transition-transform duration-300`} />
+                    </div>
+                    <span className="mode-title text-lg font-bold">{mode.title}</span>
+                    <span className="mode-sub text-sm leading-relaxed">{mode.subtitle}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="callout tip mt-8">
@@ -97,12 +138,21 @@ export default function Home() {
         ) : (
           // ========== 선택된 모드 작업 화면 ==========
           <section>
-            <button onClick={goBack} className="btn-ghost mb-6">
-              ← 모드 다시 고르기
+            <button onClick={goBack} className="btn-ghost mb-6 flex items-center gap-2 group cursor-pointer">
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+              <span>모드 다시 고르기</span>
             </button>
 
-            <div className="flex items-start gap-3 mb-1">
-              <span className="text-3xl">{selected.emoji}</span>
+            <div className="flex items-center gap-4 mb-6">
+              {(() => {
+                const config = ICON_CONFIG[selected.id] || { icon: Sparkles, bg: "bg-gray-50 border border-gray-100", color: "text-gray-500" };
+                const IconComponent = config.icon;
+                return (
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${config.bg}`}>
+                    <IconComponent className={`w-7 h-7 ${config.color}`} />
+                  </div>
+                );
+              })()}
               <div>
                 <h2 className="text-2xl font-bold text-teal leading-tight">
                   {selected.title}
@@ -130,8 +180,9 @@ export default function Home() {
                   {loading ? "생각하는 중…" : selected.buttonText}
                 </button>
                 {input.trim() && !loading && (
-                  <button className="btn-ghost" onClick={() => setInput("")}>
-                    지우기
+                  <button className="btn-ghost flex items-center gap-2 group cursor-pointer" onClick={() => setInput("")}>
+                    <Trash2 className="w-4 h-4 text-muted group-hover:text-ink transition-colors" />
+                    <span>지우기</span>
                   </button>
                 )}
               </div>
