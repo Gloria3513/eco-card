@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>에코카드 히어로 (EcoCard Hero) - 환경 보호 & 분리수거 인터랙티브 웹앱</title>
+  <meta name="description" content="카드를 뒤집고 쓰레기를 올바르게 분리수거하며 탄소 중립과 환경 보호 개념을 학습하는 고품격 참여형 에듀게임 웹앱입니다.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Floating Background Ambient Light Orbs -->
+  <div class="orb orb-1" aria-hidden="true"></div>
+  <div class="orb orb-2" aria-hidden="true"></div>
+
+  <!-- HTML5 Canvas overlay for leaves particles and sparkles -->
+  <canvas id="effect-canvas"></canvas>
+
+  <div class="app-container">
+    
+    <!-- 1. Header Section -->
+    <header>
+      <div class="logo-section">
+        <span class="logo-icon" aria-label="새싹 이모지">🌱</span>
+        <div class="logo-text">
+          <h1>EcoCard Hero</h1>
+          <p>에코카드 히어로</p>
+        </div>
+      </div>
+      <div class="utility-buttons">
+        <button id="sound-toggle-btn" class="icon-btn" title="효과음 음소거 토글" aria-label="효과음 음소거 토글">
+          <span id="sound-icon">🔊</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. Eco Stats Dashboard -->
+    <section class="stat-dashboard" aria-label="에코 스탯 대시보드">
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <span class="stat-label">에코 파워</span>
+          <span id="score-value" class="stat-value primary">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">최고 점수</span>
+          <span id="best-value" class="stat-value">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">콤보 스트릭</span>
+          <span id="streak-value" class="stat-value secondary">0🔥</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">현재 에코 레벨</span>
+          <div class="stat-value" style="font-size: 1.15rem; gap: 4px; padding-top: 4px;">
+            <span id="badge-emoji">🌱</span>
+            <span id="badge-name" style="font-weight: 800; font-size: 0.95rem;">에코 입문자</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Progress Bar to Next Level -->
+      <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border); padding: 12px 16px; border-radius: 16px; margin-top: 16px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); margin-bottom: 6px; font-weight: 700;">
+          <span>레벨업 성장도</span>
+          <span style="color: var(--color-accent);">지구를 지키는 힘</span>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.05); height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
+          <div id="lvl-progress-bar" style="background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%); height: 100%; width: 0%; transition: width 0.5s ease-out;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Navigation Tabs -->
+    <nav class="modes-navigation" aria-label="게임 모드 선택">
+      <button id="tab-trash-game" class="mode-tab active" aria-selected="true">
+        <span>🗑️</span> 분리배출 마스터
+      </button>
+      <button id="tab-flashcards" class="mode-tab" aria-selected="false">
+        <span>🔄</span> 탄소 중립 3D 카드
+      </button>
+    </nav>
+
+    <!-- 4. MAIN INTERACTIVE VIEWS -->
+    <main>
+      
+      <!-- VIEW 1: Waste Classification Game -->
+      <section id="trash-game-view" class="game-view active" aria-label="분리배출 퀴즈 구역">
+        <div class="active-game-area">
+          <div class="bin-grid-title" style="margin-bottom: -10px;">화면 속 쓰레기에 알맞은 분리수거함을 아래에서 선택하세요!</div>
+          
+          <!-- The Central Waste Card Container -->
+          <div class="waste-card-holder">
+            <div id="waste-card-box" class="waste-card" id="waste-card">
+              <div id="waste-illustration" class="waste-card-image">
+                <!-- Inner dynamic vector SVGs get loaded here -->
+              </div>
+              <div class="waste-card-info">
+                <h2 id="waste-name" class="waste-card-title">플라스틱 페트병</h2>
+                <div id="waste-badge-tip" class="waste-card-tip">💡 라벨 제거하고 압착하기</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Educational explanation board -->
+          <div id="explanation-banner" class="waste-explanation-box" style="display: none;">
+            <span id="expl-icon-badge" class="expl-icon">✅</span>
+            <div class="expl-content">
+              <h3 id="expl-title-text" class="expl-title">성공! 올바른 분리수거 방법</h3>
+              <p id="expl-desc-text" class="expl-text">라벨을 떼어내고 압착해서 플라스틱 배출함에 넣어주세요.</p>
+            </div>
+          </div>
+
+          <!-- Bins Selection Grid -->
+          <div class="bin-grid-container">
+            <div class="bin-grid-title">올바른 분리수거함 선택</div>
+            <div class="bin-grid">
+              
+              <button class="bin-button bin-plastic" data-bin="plastic" aria-label="플라스틱 수거함">
+                <span class="bin-icon" aria-hidden="true">🔵</span>
+                <span class="bin-name">플라스틱</span>
+                <span class="bin-desc">페트병, 완구, 청결스티로폼</span>
+              </button>
+              
+              <button class="bin-button bin-paper" data-bin="paper-carton" aria-label="종이 및 팩 수거함">
+                <span class="bin-icon" aria-hidden="true">🟡</span>
+                <span class="bin-name">종이/팩</span>
+                <span class="bin-desc">신문, 종이컵, 우유팩</span>
+              </button>
+              
+              <button class="bin-button bin-can-glass" data-bin="can-glass" aria-label="캔 및 유리 수거함">
+                <span class="bin-icon" aria-hidden="true">🔴</span>
+                <span class="bin-name">캔/유리</span>
+                <span class="bin-desc">음료캔, 유리병, 부탄가스</span>
+              </button>
+              
+              <button class="bin-button bin-general-food" data-bin="general-food" aria-label="일반 및 음식물 쓰레기통">
+                <span class="bin-icon" aria-hidden="true">🟣</span>
+                <span class="bin-name">일반/음식물</span>
+                <span class="bin-desc">사과씨, 깨진유리, 컵라면용기</span>
+              </button>
+              
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: Carbon Neutrality 3D Flashcards -->
+      <section id="flashcards-view" class="game-view" aria-label="탄소중립 학습 구역">
+        <div class="flashcards-container">
+          <div class="bin-grid-title" style="margin-bottom: -10px;">카드를 클릭하면 뒷면이 뒤집히며 상세 정보가 나타납니다!</div>
+          
+          <!-- 3D Interactive Card deck -->
+          <div class="flip-card-scene" id="flash-card-box">
+            <div class="flip-card-inner" id="flash-card-inner">
+              
+              <!-- Front Face of Card -->
+              <div class="card-face card-face-front">
+                <span id="card-badge" class="front-badge">글로벌 캠페인</span>
+                <div class="front-main">
+                  <span id="card-front-icon" class="front-icon" aria-hidden="true">🍃</span>
+                  <h2 id="card-front-title" class="front-title">탄소 중립</h2>
+                  <span id="card-front-tip" class="front-tip">Net Zero</span>
+                </div>
+                <div class="front-prompt">
+                  <span>💡</span> 카드를 터치하여 뒷면의 핵심 개념 확인
+                </div>
+              </div>
+
+              <!-- Back Face of Card -->
+              <div class="card-face card-face-back">
+                <div class="back-header">
+                  <h3 id="card-back-title" class="back-title">탄소 중립</h3>
+                  <span class="back-eco-tag">에코 키워드 사전</span>
+                </div>
+                
+                <div class="back-body">
+                  <p id="card-back-definition" class="back-definition">
+                    실질적인 온실가스 배출량을 "0"으로 만드는 개념. 배출하는 온실가스 양과 흡수하는 양을 같게 조율합니다.
+                  </p>
+                  
+                  <div class="back-example">
+                    <div class="back-example-label">실생활 실천 사례</div>
+                    <p id="card-back-example" class="back-example-text">
+                      대중교통을 애용하고, 신재생 에너지 투자를 늘려 배출가스를 차단해요.
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="back-footer">
+                  화면을 터치하면 다시 앞으로 돌아갑니다
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom flashcard controls -->
+          <div class="card-actions-wrapper">
+            
+            <!-- Navigation -->
+            <div class="card-navigation">
+              <button id="prev-card-btn" class="nav-btn" aria-label="이전 카드 보기">
+                <span>◀</span> 이전 카드
+              </button>
+              <span id="card-idx-indicator" class="card-indicator">1 / 6</span>
+              <button id="next-card-btn" class="nav-btn" aria-label="다음 카드 보기">
+                다음 카드 <span>▶</span>
+              </button>
+            </div>
+            
+            <!-- Got it / Study again validation buttons -->
+            <div class="knowledge-verdict">
+              <button id="btn-study-again" class="btn btn-secondary-action" aria-label="다시 공부하기">
+                <span>🔄</span> 아하! 다시보기
+              </button>
+              <button id="btn-learned-gotit" class="btn btn-primary-action" aria-label="개념 암기 완료 수락">
+                <span>✨</span> 완벽 이해! (+10P)
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 5. Toast Notification System -->
+    <div id="toast-notification" class="toast-msg" role="alert" aria-live="polite">
+      <span>🍃</span>
+      <span id="toast-text">탄소 중립 에코 파워 10P 충전 완료!</span>
+    </div>
+
+    <!-- 6. Level Up Celebratory Modal Popup overlay -->
+    <div id="level-up-modal" class="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-lvl-title">
+      <div class="modal-content">
+        <span id="modal-emoji" class="modal-icon" aria-hidden="true">🌳</span>
+        <h2 id="modal-lvl-title" class="modal-title">에코 히어로 달성!</h2>
+        <p class="modal-desc">축하합니다! 지구를 위한 올바른 분리배출 수칙과 풍부한 지식을 바탕으로 더욱 강력한 지구 수호자로 거듭나셨습니다.</p>
+        
+        <div class="modal-badge-info">
+          <div id="modal-lvl-power" class="modal-badge-name">탄소 중립의 원리를 꿰뚫은 위대한 영웅</div>
+          <div class="modal-badge-power">새로운 에코 타이틀 배지가 해제되었습니다!</div>
+        </div>
+        
+        <button id="modal-close-btn" class="btn btn-primary-action modal-btn" aria-label="계속 진행">
+          멋져요, 계속해서 지구 지키기!
+        </button>
+      </div>
+    </div>
+
+    <!-- 7. Footer Stats & Copyright -->
+    <footer>
+      <div class="footer-stats">
+        <span>🌱 심은 나무: <strong style="color:var(--color-primary);">5그루</strong></span>
+        <span class="footer-stats-bullet">•</span>
+        <span>🌊 아낀 깨끗한 물: <strong style="color:var(--color-secondary);">45L</strong></span>
+      </div>
+      <p>© 2026 EcoCard Hero. 지구를 구하는 가장 가벼운 발걸음.</p>
+    </footer>
+
+  </div>
+
+  <!-- core app scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
