@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.aimetatact.kr/sitemap.xml
+Sitemap: https://www.aimetatact.co.kr/sitemap.xml
